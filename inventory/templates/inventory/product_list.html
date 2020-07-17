@@ -1,0 +1,20 @@
+{%  extends 'inventory/base_layout.html' %}
+
+{% block product_content %}
+    {% for product in object_list %}
+       <li><a href="{{ product.get_absolute_url }}"> {{ product.product_name }}</a> </li>
+    {% endfor %}
+
+
+{#   User following code for paginator #}
+{#{% if is_paginated %}#}
+{#    {% if page_obj.has_previous %}#}
+{#        {% endif %}#}
+{#    {% if page_obj.has_next %}#}
+{#    {% endif %}#}
+{#        {% endif %}#}
+{#{% endif %}#}
+{#    {% for i in range %}#}
+{#    {% endfor %}#}
+
+{% endblock %}

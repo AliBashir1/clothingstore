@@ -1,0 +1,42 @@
+{% extends 'inventory/base_layout.html' %}
+
+{% block product_content %}
+
+    {% for shoe in shoes %}
+        <li>{{ shoe.product_image }}</li>
+    {% endfor %}
+
+
+    {% for b in bottoms %}
+        <li>{{ b }}</li>
+    {% endfor %}
+
+    {% for t in tops %}
+        <label>Name</label>
+        <h4>{{ t.product_name }}</h4>
+         <label>Price</label>
+        <a href="{% url 'product-detail' t.get_classname t.product_id %}" >{{ t.product_price }}</a>
+    {% endfor %}
+      {% for a in accessories %}
+        <label>Name</label>
+        <h4>{{ a.product_name }}</h4>
+         <label>Price</label>
+        <a href="{% url 'product-detail' a.get_classname a.product_id  %}" >{{ a.product_price }}</a>
+    {% endfor %}
+
+{% endblock %}
+
+{% block form_content %}
+    <form action="{% url 'process-form' %}"  method="GET" >
+        <h3> Please select the product you want to add</h3>
+            <select name="select">
+                <option value="Tops"> Top </option>
+                <option value ="Bottoms"> Bottom </option>
+                <option value="Accessories"> Accessories </option>
+                <option value="Shoes"> Shoes </option>
+                <option value="Suppliers"> Supplier </option>
+            </select>
+    <button class="button primary " type="submit"> Pick </button>
+    </form>
+{% endblock %}
+

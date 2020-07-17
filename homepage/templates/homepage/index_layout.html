@@ -1,0 +1,28 @@
+{% load static  %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="{%  static 'jscss/css/foundation.css' %}">
+    <link rel="stylesheet" href="{%  static 'jscss/css/app.css' %}"> {# Custom CSS - this will override foundation css #}
+{#    <link rel="stylesheet" href="{%  static 'jscss/css/foundation.min.csscss' %}">#}
+
+</head>
+<body>
+<header>hye</header>
+
+{% block index_content %}
+{% endblock %}
+
+<script src="{% static 'jscss/js/vendor/jquery.js' %}"></script>
+<script src="{% static 'jscss/js/vendor/what-input.js' %}"></script>
+<script src="{% static 'jscss/js/vendor/foundation.js' %}"></script>
+{#<script src="{% static 'jscss/js/vendor/foundation.min.js' %}"></script>#}
+{# custom js  #}
+<script src="{% static 'jscss/js/app.js' %}"></script>
+</body>
+
+
+</html>

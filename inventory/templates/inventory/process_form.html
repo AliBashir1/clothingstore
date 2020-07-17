@@ -1,0 +1,25 @@
+{%  extends 'inventory/base_layout.html' %}
+{% block form_content %}
+<form method="POST" class="post-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid-container">
+                <div class="grid-x grid-padding-x">
+                    <div class="row">
+                        {{ form.errors }}
+                        {%  for field in product_form%}
+                        <div class="small-12 medium-6">
+                                <label class="inline_label"> {{ field.label_tag }} </label>
+                                    {{ field }}
+                        </div>
+                    {% endfor %}
+                        <p>{{ inventory_form.as_p }}</p>
+                       {% if field.help_text %}
+                                <p class="help">{{ field.help_text|safe }}</p>
+                       {% endif %}
+                    </div>
+                </div>
+            </div>
+
+    <button type="submit" class="button secondary">submit</button>
+</form>
+{% endblock %}

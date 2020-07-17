@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title class="title-bar ">{% block title %}{% endblock %} </title>
+
+     <link rel="stylesheet" href="{%  static 'jscss/css/foundation.css' %}">
+    <link rel="stylesheet" href="{%  static 'jscss/css/app.css' %}"> {# Custom CSS - this will override foundation css #}
+{#    <link rel="stylesheet" href="{%  static 'jscss/css/foundation.min.csscss' %}">#}
+
+
+</head>
+<body>
+{% block header %}
+    <div class="top-bar-container" data-sticky-container>
+  <div class="sticky sticky-topbar" data-sticky data-options="anchor: page; marginTop: 0; stickyOn: small;">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <ul class="dropdown menu" data-dropdown-menu>
+          <li class="menu-text">Site Title</li>
+          <li class="has-submenu">
+            <a href="#">One</a>
+            <ul class="submenu menu vertical" data-submenu>
+              <li><a href="#">One</a></li>
+              <li><a href="#">Two</a></li>
+              <li><a href="#">Three</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Two</a></li>
+          <li><a href="#">Three</a></li>
+        </ul>
+      </div>
+      <div class="top-bar-right">
+        <ul class="menu">
+          <li><input type="search" placeholder="Search"></li>
+          <li><button type="button" class="button">Search</button></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+
+{% block product_content %}
+{% endblock %}
+
+{% block form_content %}
+{% endblock %}
+
+
+
+<script src="{% static 'jscss/js/vendor/jquery.js' %}"></script>
+<script src="{% static 'jscss/js/vendor/what-input.js' %}"></script>
+<script src="{% static 'jscss/js/vendor/foundation.js' %}"></script>
+{#<script src="{% static 'jscss/js/vendor/foundation.min.js' %}"></script>#}
+{# custom js  #}
+<script src="{% static 'jscss/js/app.js' %}"></script>
+</body>
+
+</html>
