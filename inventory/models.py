@@ -84,7 +84,6 @@ class ProductAbstract(models.Model):
     def save(self, *args, **kwarg):
         self.slug = slugify(self.product_name + '_' + self.product_sku)
         # todo delete this
-        print(self, args, kwarg, 'This is inside save method in model')
         super(ProductAbstract, self).save(*args, **kwarg)
 
     def __str__(self):
@@ -107,7 +106,6 @@ class ProductAbstract(models.Model):
 class Shoes(ProductAbstract):
     product_image = models.ImageField(upload_to='Shoes')
     product_size = models.CharField(max_length=2, choices=Size.ShoeSize.choices, default='NA')
-
 
     class Meta:
         verbose_name_plural = db_table = 'shoes'

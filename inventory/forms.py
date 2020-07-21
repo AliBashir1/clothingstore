@@ -1,9 +1,10 @@
 from .models import Shoes, Accessories, Tops, Bottoms, Suppliers, Inventory
 from django import forms
-
+# from betterforms.multiform import MultiModelForm
+# https://docs.djangoproject.com/en/3.0/topics/forms/modelforms/
 
 class ProductAddForm:
-    model_set = {
+    model_mapping = {
         'Tops': Tops,
         'Bottoms': Bottoms,
         'Accessories': Accessories,
@@ -12,7 +13,7 @@ class ProductAddForm:
     }
 
     def __init__(self, model, instance=None):
-        self.model = self.model_set.get(model)
+        self.model = self.model_mapping.get(model)
 
         class CreateForm(forms.ModelForm):
             class Meta:
@@ -26,8 +27,15 @@ class ProductAddForm:
             self.form_class = CreateForm(instance=instance)
 
 
-
 class InventoryAddForm(forms.ModelForm):
+
     class Meta:
         model = Inventory
-        fields = ['product_cost', 'product_count']
+        fields = ['product_id', 'product_cost', 'product_count']
+
+class TopsAddForm(forms.ModelForm):
+
+    class Meta:
+        model = Tops
+        fields = '__all__'
+        exclude = ['slug']

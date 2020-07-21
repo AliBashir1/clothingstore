@@ -1,11 +1,16 @@
 {% extends 'inventory/base_layout.html' %}
 
 
-
 {% block form_content %}
-   <form method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Update">
-</form>
-
+    <form action="{% url 'testform' %}"  method="GET" >
+        <h3> Please select the product you want to add</h3>
+            <select name="select">
+                <option value="Tops"> Top </option>
+                <option value ="Bottoms"> Bottom </option>
+                <option value="Accessories"> Accessories </option>
+                <option value="Shoes"> Shoes </option>
+                <option value="Suppliers"> Supplier </option>
+            </select>
+    <button class="button primary " type="submit"> Pick </button>
+    </form>
 {% endblock %}

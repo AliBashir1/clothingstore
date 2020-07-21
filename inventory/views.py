@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, reverse, get_object_or_404
 from django.urls import path, re_path, reverse_lazy
 from django.views.generic import ListView, DetailView, FormView, TemplateView, CreateView, UpdateView
@@ -7,24 +6,6 @@ from django.views.generic.edit import FormMixin
 from .forms import  InventoryAddForm, ProductAddForm
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
-
-
-class ProductList(ListView):
-    template_name = 'inventory/product_list.html'
-
-    queryset = Shoes.objects.all()
-    queryset.extra_context = Tops.objects.all()
-    print(queryset)
-
-    # # set the pages for every 2 article and use if is_paginated in template
-    # paginate_by = 2
-    #
-    # def get_ordering(self):
-    #     return self.model.product_category
-    # def get_context_data(self, **kwargs):
-    #     context = super(ShoesList, self).get_context_data(**kwargs)
-    #     context['range'] =range(context['paginator'].num_pages)
-    #     return context
 
 
 class ProductDetail(DetailView):
@@ -56,25 +37,33 @@ class ProductUpdate(UpdateView):
     }
     context_object_name = 'form'
     template_name = 'inventory/process_form.html'
-    success_url = reverse_lazy('product-update')
+    success_url = reverse_lazy('product-detail')
+
+    def get_success_url(self):
+        id = self.kwargs.get('pk')
+        return reverse_lazy('product-detail', kwargs={'pk': id})
 
     def get_form_class(self, instance=None):
-        """ This method create form_class based on the value of "select" from html
-        :return (ModelForm) form_class:
+        """This method gets the product type from url which has similar name as model of product.
+        That information is being used to get form_class from ProductAddForm.
+
+        :param (Model) instance:
+       :return (ModelForm) form_class:
         """
-        form_type = self.kwargs.get('product_type')
-        forms_obj = ProductAddForm(form_type, instance=instance)
-        self.form_class = forms_obj.form_class
-        # TODO delete this
-        print("form_type: {}\nform_obj: {}\nform_class: {}".format(form_type, forms_obj, self.form_class))
-        return self.form_class
+        product_type = self.kwargs.get('product_type')
+        forms_obj = ProductAddForm(product_type, instance=instance)
+        # Returns form_class from ProductAddForm
+        return forms_obj.form_class
 
     def get_object(self, queryset=None):
+        """Method uses pk(product_id) and product_type from url to get Model and object primary key
+        which is used to return current instance.
+        :param queryset:
+        :return (MODEL) Object:
+        """
         id = self.kwargs.get('pk')
         product_type = self.kwargs.get('product_type')
         model = self.models_mapping.get(product_type)
-        # TODO -- delete this
-        print("id: {}\nproduct_type: {}\nmodel: {}".format(id, product_type, model))
         return get_object_or_404(klass=model, product_id=id)
 
     def get_context_data(self, **kwargs):
@@ -84,7 +73,7 @@ class ProductUpdate(UpdateView):
 
         # only Products need inventory detail - find a better way to deal with this
         if self.kwargs.get('product_type') != 'Suppliers':
-            inv_obj = Inventory.objects.filter()
+            inv_obj = Inventory.objects.get(content_type__model=obj.get_classname(), product_id=obj.product_id)
             context['inventory_form'] = InventoryAddForm(instance=inv_obj)
         return context
 
@@ -94,18 +83,20 @@ class ProductUpdate(UpdateView):
         :param form:
         :return:
         """
-        obj = form.save()
-        model = ContentType.objects.get(model__iexact=obj.get_classname())
-        Inventory.objects.create(product_id=obj.product_id,
-                                 product_count=self.request.POST.get('product_count'),
-                                 product_cost=self.request.POST.get('product_cost'),
-                                 # Date format 2014-07-05 14:34:14
-                                 updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                 content_type_id=model.pk)
+        obj = form.save(commit=False)
+        print(form.cleaned_data)
+        # obj.inventory.product_count = form.cleaned_data[]
+        # obj.inventory.product_cost= form.cleaned_data['product_cost']
+        obj.save()
+        # model = ContentType.objects.get(model__iexact=obj.get_classname())
+        # Inventory.objects.create(product_id=obj.product_id,
+        #                          product_count=self.request.POST.get('product_count'),
+        #                          product_cost=self.request.POST.get('product_cost'),
+        #                          # Date format 2014-07-05 14:34:14
+        #                          updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        #                          content_type_id=model.pk)
 
         return super(ProductUpdate, self).form_valid(form)
-
-
 
 
 # may be use list view for pagination
@@ -138,7 +129,21 @@ class ProcessForm(FormView):
         It handles all of the model forms from Inventory app.
     """
     template_name = 'inventory/process_form.html'
-    success_url = reverse_lazy('product-home')
+    product_id =None
+    product_type =None
+    form_type = 'Suppliers'
+
+    def get_success_url(self):
+        """This direct redirect to given url after successfully submitting form
+        :return (Method) reverse :
+        """
+        # todo delete after dubugging
+        print("ProcessForm.get_success_url\npk : {}\nproduct_type: {}".format(self.product_id, self.product_type))
+        if self.request.GET.get('select') != self.form_type:
+            return reverse('inventory-form', kwargs={'pk': self.product_id,
+                                                   'product_type': self.product_type})
+        else:
+            return reverse_lazy('product-home')
 
     def get_form_class(self):
         """ This method create form_class based on the value of "select" from html
@@ -148,31 +153,79 @@ class ProcessForm(FormView):
         forms_obj = ProductAddForm(form_type)
         return forms_obj.form_class
 
-    def get_context_data(self, **kwargs):
-        context = super(ProcessForm, self).get_context_data(**kwargs)
-        context['product_form'] = self.get_form_class()
-        # only Products need inventory detail - find a better way to deal with this
-        if self.request.GET.get('select') != 'Suppliers':
-            context['inventory_form'] = InventoryAddForm
-        return context
-
     def form_valid(self, form):
         """
-         overriding form_valid to add inventory of product
+
         :param form:
         :return:
         """
-        obj = form.save()
-        model = ContentType.objects.get(model__iexact=obj.get_classname())
-        Inventory.objects.create(product_id=obj.product_id,
-                                 product_count=self.request.POST.get('product_count'),
-                                 product_cost=self.request.POST.get('product_cost'),
-                                 # Date format 2014-07-05 14:34:14
-                                 added_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                 updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                 content_type_id=model.pk)
+        product_obj = form.save()
+        self.product_id = product_obj.product_id
+        self.product_type = product_obj.get_classname()
+
+        product_obj.save()
 
         return super(ProcessForm, self).form_valid(form)
+
+
+class InventoryForm(FormView):
+    template_name = 'inventory/process_form.html'
+    success_url = reverse_lazy('product-home')
+
+    def get_product_detail(self):
+        """This method will fetch the product_id(pk) and product_type from url kwargs. product_type is being used
+        to get content_type_id which is needed to create a generic relation between inventory and
+        products(top, bottom, accessories )
+        Variables:
+            product_type (str): a name coming from html select option which is same as model name.
+            product_id (int) : It is the primary key of product that just been added into product table
+        :return (tuple) product_type, product_id, content_type_id
+        """
+        product_type = self.kwargs.get('product_type')
+        product_id = self.kwargs.get('pk')
+
+        # getting primary key from of content_type
+        content_type = ContentType.objects.get(model__iexact=product_type)
+        content_type_id = content_type.pk
+        return product_type, product_id, content_type_id
+
+    def get_initial(self):
+
+        # You need following fields prepopulated 1: Content_type_id 2: product_id 3
+        product_type, product_id, content_type_id = self.get_product_detail()
+
+        initial = super().get_initial()
+        initial['product_id'] = product_id
+        initial['content_type_id'] = content_type_id
+
+
+        return initial
+
+    def get_form_class(self, **kwargs):
+        return InventoryAddForm
+
+    def form_valid(self, form):
+        """
+            Inventory have genaric relation to Top, Bottoms, accessories and Shoes Table.
+            This method will fetch product_type from url kwargs and product_id which
+            will be used to get content_type_id from django_content_type to be used in Inventory
+
+
+        :param form:
+        :return:
+        """
+
+        _ , _ , content_type_id = self.get_product_detail()
+
+
+        inventory_obj = form.save(commit=False)
+        print(content_type_id)
+        inventory_obj.added_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        inventory_obj.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        inventory_obj.content_type_id = content_type_id
+        inventory_obj.save()
+
+        return super(InventoryForm, self).form_valid(form)
 
 
 
@@ -189,41 +242,30 @@ class ProcessForm(FormView):
 
 # Example views and forms for testing purposes
 
-class TestClass(UpdateView):
-    model = Accessories
-    fields = '__all__'
+class TestClass(TemplateView):
     template_name = 'inventory/testclass.html'
 
 
-
-class TestForms(FormMixin, TemplateView):
-    template_name = 'inventory/testclass.html'
+class TestForms(FormView):
+    template_name = 'inventory/testprocessform.html'
     success_url = reverse_lazy('test')
 
-    def get(self, request, *args, **kwargs):
-        if request == 'GET':
-            self.get_template_names()
-        super(TestForms, self).get(request, *args, **kwargs)
-
-    def get_template_names(self):
-        self.template_name = 'inventory/testclass.html'
-        return self.template_name
+    def get_prefix(self):
+        return 'product_form'
 
     def get_form_class(self):
-        form_class = None
+
         form_type = self.request.GET.get('select')
-        print(form_type)
         forms_obj = ProductAddForm(form_type)
         return forms_obj.form_class
 
-    def get_context_data(self, **kwargs):
-        context = super(TestForms, self).get_context_data(**kwargs)
-        context['form'] = self.get_form_class()
-        # only Products need inventory detail
-        if self.request.GET.get('select') != 'Suppliers':
-            context['inventory'] = InventoryAddForm
-        return context
-
     def form_valid(self, form):
-        form.save()
+        print( self.prefix)
+        print('-'*40)
+        print(form)
+        print('-' * 40)
+        print(form.cleaned_data)
+        print('-' * 40)
+        print(self.kwargs)
+
         return super(TestForms, self).form_valid(form)
