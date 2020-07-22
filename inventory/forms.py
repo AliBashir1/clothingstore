@@ -3,6 +3,7 @@ from django import forms
 # from betterforms.multiform import MultiModelForm
 # https://docs.djangoproject.com/en/3.0/topics/forms/modelforms/
 
+
 class ProductAddForm:
     model_mapping = {
         'Tops': Tops,

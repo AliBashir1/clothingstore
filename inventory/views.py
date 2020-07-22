@@ -177,8 +177,8 @@ class InventoryForm(FormView):
         to get content_type_id which is needed to create a generic relation between inventory and
         products(top, bottom, accessories )
         Variables:
-            product_type (str): a name coming from html select option which is same as model name.
-            product_id (int) : It is the primary key of product that just been added into product table
+            product_type (str): product type name (similar to model).
+            product_id (int) : primary key of product
         :return (tuple) product_type, product_id, content_type_id
         """
         product_type = self.kwargs.get('product_type')
@@ -197,7 +197,6 @@ class InventoryForm(FormView):
         initial = super().get_initial()
         initial['product_id'] = product_id
         initial['content_type_id'] = content_type_id
-
 
         return initial
 

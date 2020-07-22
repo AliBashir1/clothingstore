@@ -5,6 +5,9 @@ from django.utils.text import slugify
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
+from homepage.validators import alphabets, alphanumeric, emailvalidator, numeric
+from django.core.validators import EmailValidator
+
 
 class Inventory(models.Model):
     inventory_id = models.AutoField(primary_key=True)
@@ -28,16 +31,18 @@ class Inventory(models.Model):
 
 class Suppliers(models.Model):
     supplier_id = models.AutoField(primary_key=True)
-    supplier_name = models.CharField(max_length=200)
-    contact_firstName = models.CharField(max_length=200)
-    contact_lastName = models.CharField(max_length=200)
-    contact_title = models.CharField(max_length=200)
-    supplier_address1 = models.CharField(max_length=200)
-    supplier_address2 = models.CharField(max_length=200, null=True)
+    supplier_name = models.CharField(max_length=200, validators=[alphabets])
+    contact_firstName = models.CharField(max_length=200, validators=[alphabets])
+    contact_lastName = models.CharField(max_length=200, validators=[alphabets])
+    contact_title = models.CharField(max_length=200, validators=[alphabets])
+    supplier_address1 = models.CharField(max_length=200, validators=[alphanumeric])
+    supplier_address2 = models.CharField(max_length=100, null=True, blank=True, validators=[alphanumeric])
+    # todo find a library to handle state/country choices
     supplier_city = models.CharField(max_length=200)
-    supplier_state = models.CharField(max_length=2)  # todo find a library to handle state choices
+    supplier_state = models.CharField(max_length=2)
     supplier_country = models.CharField(max_length=200)
-    supplier_email = models.EmailField()
+
+    supplier_email = models.EmailField(validators=[emailvalidator])
     supplier_website = models.URLField()
     slug = models.SlugField(unique=True, null=False, blank=False)
 
@@ -96,8 +101,6 @@ class ProductAbstract(models.Model):
 
     class Meta:
         abstract = True
-        # verbose_name_plural = db_table =
-        # verbose_name = 'bottom'
 
     def get_absolute_url(self):
         return reverse('product-detail', kwargs={'pk': self.product_id})
@@ -119,8 +122,6 @@ class Tops(ProductAbstract):
                                     default='NA'
                                     )
     product_image = models.ImageField(upload_to='Tops/')
-
-
 
     class Meta:
         verbose_name_plural = db_table = 'tops'
@@ -145,9 +146,17 @@ class Bottoms(ProductAbstract):
 
 
 class Accessories(ProductAbstract):
-    product_type = models.CharField(max_length=2, default=ProductCategory.Accessories.choices)
+    product_type = models.CharField(max_length=2, default=ProductCategory.Accessories.DEFAULT)
     product_image = models.ImageField(upload_to='accessories/')
 
     class Meta:
         verbose_name_plural = db_table = 'accessories'
         verbose_name = 'accessory'
+
+
+"""
+Import links:
+
+Drop Down state-country 
+link: https://simpleisbetterthancomplex.com/tutorial/2018/01/29/how-to-implement-dependent-or-chained-dropdown-list-with-django.html
+"""
