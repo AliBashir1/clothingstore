@@ -5,16 +5,18 @@ from django.utils.text import slugify
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
-from homepage.validators import alphabets, alphanumeric, emailvalidator, numeric
-from django.core.validators import EmailValidator
+from homepage.validators import (alphabets, alphanumeric,
+                                 emailvalidator, numeric,
+                                 httpurlvalidator, min_value,
+                                 alphanumspecial)
 
 
 class Inventory(models.Model):
     inventory_id = models.AutoField(primary_key=True)
-    product_count = models.IntegerField(default=0)
-    product_cost = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-    added_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    product_count = models.IntegerField(default=0, validators=[numeric, min_value])
+    product_cost = models.DecimalField(max_digits=6, decimal_places=2, default=0, validators=[numeric, min_value])
+    added_at = models.DateTimeField(editable=False)
+    updated_at = models.DateTimeField(editable=False)
 
     # Generic Relaton
     # model type
@@ -28,13 +30,16 @@ class Inventory(models.Model):
         verbose_name_plural = db_table = 'inventory'
         verbose_name = 'inventory'
 
+    # def get_absolute_url(self):
+    #     return reverse('product-home',  kwargs={'slug': self.slug})
+
 
 class Suppliers(models.Model):
     supplier_id = models.AutoField(primary_key=True)
     supplier_name = models.CharField(max_length=200, validators=[alphabets])
     contact_firstName = models.CharField(max_length=200, validators=[alphabets])
     contact_lastName = models.CharField(max_length=200, validators=[alphabets])
-    contact_title = models.CharField(max_length=200, validators=[alphabets])
+    contact_title = models.CharField(max_length=200, validators=[alphanumspecial])
     supplier_address1 = models.CharField(max_length=200, validators=[alphanumeric])
     supplier_address2 = models.CharField(max_length=100, null=True, blank=True, validators=[alphanumeric])
     # todo find a library to handle state/country choices
@@ -43,11 +48,11 @@ class Suppliers(models.Model):
     supplier_country = models.CharField(max_length=200)
 
     supplier_email = models.EmailField(validators=[emailvalidator])
-    supplier_website = models.URLField()
+    supplier_website = models.URLField(validators=[httpurlvalidator])
     slug = models.SlugField(unique=True, null=False, blank=False)
 
     def save(self, *args, **kwarg):
-        self.slug = slugify(self.supplier_name)
+        self.slug = slugify(self.supplier_name + '_name_' + self.contact_firstName + '_' + self.contact_lastName )
         super(Suppliers, self).save(*args, **kwarg)
 
     def __str__(self):
@@ -58,21 +63,19 @@ class Suppliers(models.Model):
         verbose_name = 'supplier'
 
     def get_absolute_url(self):
-        return reverse(viewname='supplier-detail', kwargs={'pk': self.id})
+        return reverse(viewname='supplier-detail', kwargs={'slug': self.slug})
 
 
 class ProductAbstract(models.Model):
     product_id = models.AutoField(primary_key=True)
-    product_sku = models.CharField(max_length=50,
-                                   unique=True,
-                                   db_index=True
+    product_sku = models.CharField(max_length=50, unique=True,
+                                   db_index=True, validators=[alphanumeric]
                                    )
-    product_name = models.CharField(max_length=50)
-    product_color = models.CharField(max_length=50)
-    product_shortDesc = models.CharField(max_length=50, blank=True)
-    product_longDesc = models.CharField(max_length=50, blank=True)
-    product_price = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-    product_weight = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    product_name = models.CharField(max_length=50, validators=[alphabets])
+    product_color = models.CharField(max_length=50, validators=[alphabets])
+    product_shortDesc = models.CharField(max_length=50, blank=True, validators=[alphanumspecial])
+    product_longDesc = models.CharField(max_length=50, blank=True, validators=[alphanumspecial])
+    product_price = models.DecimalField(max_digits=6, decimal_places=2, default=0, validators=[min_value])
     slug = models.SlugField(unique=True, null=False, blank=False)
     # FK
     supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, default=-1)
@@ -103,7 +106,8 @@ class ProductAbstract(models.Model):
         abstract = True
 
     def get_absolute_url(self):
-        return reverse('product-detail', kwargs={'pk': self.product_id})
+        return reverse('product-detail',  kwargs={'product_type': self.get_classname(),
+                                                  'slug': self.slug })
 
 
 class Shoes(ProductAbstract):
@@ -146,6 +150,7 @@ class Bottoms(ProductAbstract):
 
 
 class Accessories(ProductAbstract):
+
     product_type = models.CharField(max_length=2, default=ProductCategory.Accessories.DEFAULT)
     product_image = models.ImageField(upload_to='accessories/')
 

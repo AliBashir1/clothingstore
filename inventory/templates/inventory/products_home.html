@@ -15,13 +15,13 @@
         <label>Name</label>
         <h4>{{ t.product_name }}</h4>
          <label>Price</label>
-        <a href="{% url 'product-detail' t.get_classname t.product_id %}" >{{ t.product_price }}</a>
+        <a href="{{ t.get_absolute_url }}" >{{ t.product_price }}</a>
     {% endfor %}
       {% for a in accessories %}
         <label>Name</label>
         <h4>{{ a.product_name }}</h4>
          <label>Price</label>
-        <a href="{% url 'product-detail' a.get_classname a.product_id  %}" >{{ a.product_price }}</a>
+        <a href="{{ a.get_absolute_url  }}" >{{ a.product_price }}</a>
     {% endfor %}
 
 {% endblock %}
